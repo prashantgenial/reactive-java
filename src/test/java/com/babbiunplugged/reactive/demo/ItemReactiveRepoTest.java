@@ -24,7 +24,7 @@ public class ItemReactiveRepoTest {
 	private ItemReactiverepo itemRepo;
 
 	List<Item> items = Arrays.asList(new Item(null, "Fitbit watch", 400.0), new Item(null, "Mi Band 4 watch", 450.50),
-			new Item(null, "Honor 5 watch", 600.0));
+			new Item("ABC", "Honor 5 watch", 600.0), new Item(null, "Alexa", 300.0));
 
 	@Before
 	public void setUp() {
@@ -35,6 +35,20 @@ public class ItemReactiveRepoTest {
 
 	@Test
 	public void getAllItems() {
-		StepVerifier.create(itemRepo.findAll()).expectSubscription().expectNextCount(3).verifyComplete();
+		StepVerifier.create(itemRepo.findAll()).expectSubscription().expectNextCount(4).verifyComplete();
+	}
+
+	@Test
+	public void getItemById() {
+		StepVerifier.create(itemRepo.findById("ABC")).expectSubscription()
+				.expectNextMatches(item -> item.getDesc().equals("Honor 5 watch")).verifyComplete();
+	}
+
+	@Test
+	public void getItemByDesc() {
+		StepVerifier.create(itemRepo.findByDesc("Alexa").log()).expectSubscription()
+				.expectNextMatches(item -> item.getPrice() == 300.0).verifyComplete();
+
+		StepVerifier.create(itemRepo.findByDesc("Alexa")).expectSubscription().expectNextCount(1).verifyComplete();
 	}
 }
