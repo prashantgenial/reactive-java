@@ -91,6 +91,7 @@ class SecurityConfiguration {
 		return http.authorizeExchange().pathMatchers("/admin").hasAuthority("ROLE_ADMIN")
 				.pathMatchers(ITEM_FUNCTIONAL_END_POINT_V1).permitAll()
 				.pathMatchers(ITEM_FUNCTIONAL_END_POINT_V1 + "/**").permitAll()
+				.pathMatchers("/fun/runtimeexception").permitAll()
 				.pathMatchers("/user/{username}")
 				.access(new ReactiveAuthorizationManager<AuthorizationContext>() {
 
