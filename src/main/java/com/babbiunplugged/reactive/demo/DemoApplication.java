@@ -1,8 +1,14 @@
 package com.babbiunplugged.reactive.demo;
 
+import static com.babbiunplugged.reactive.demo.constants.ItemConstants.ITEM_FUNCTIONAL_END_POINT_V1;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +30,10 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
+import com.babbiunplugged.reactive.demo.document.Item;
+import com.babbiunplugged.reactive.demo.repository.ItemReactiverepo;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**Functional Interface
@@ -31,10 +41,23 @@ import reactor.core.publisher.Mono;
  *
  */
 @SpringBootApplication
-public class DemoApplication {
+public class DemoApplication implements CommandLineRunner{
+
+	@Autowired
+	private ItemReactiverepo itemRepo;
 
 	public static void main(String[] args) {
 		SpringApplication.run(DemoApplication.class, args);
+	}
+
+	@Override
+	public void run(String... args) throws Exception {
+		List<Item> items = Arrays.asList(new Item(null, "Fitbit watch", 400.0), new Item(null, "Mi Band 4 watch", 450.50),
+				new Item("ABC", "Honor 5 watch", 600.0), new Item(null, "Alexa", 300.0));
+		
+		itemRepo.deleteAll().thenMany(Flux.fromIterable(items).log("saved items:")).flatMap(itemRepo::save)
+				.thenMany(itemRepo.findAll())
+				.subscribe(item -> System.out.println("Item inserted from commandLineRunner:{}" + item));
 	}
 
 }
@@ -66,6 +89,8 @@ class SecurityConfiguration {
 	@Bean
 	public SecurityWebFilterChain securitygWebFilterChain(ServerHttpSecurity http) {
 		return http.authorizeExchange().pathMatchers("/admin").hasAuthority("ROLE_ADMIN")
+				.pathMatchers(ITEM_FUNCTIONAL_END_POINT_V1).permitAll()
+				.pathMatchers(ITEM_FUNCTIONAL_END_POINT_V1 + "/**").permitAll()
 				.pathMatchers("/user/{username}")
 				.access(new ReactiveAuthorizationManager<AuthorizationContext>() {
 

@@ -14,6 +14,7 @@ import com.babbiunplugged.reactive.demo.document.Item;
 import com.babbiunplugged.reactive.demo.repository.ItemReactiverepo;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @DataMongoTest
@@ -50,5 +51,31 @@ public class ItemReactiveRepoTest {
 				.expectNextMatches(item -> item.getPrice() == 300.0).verifyComplete();
 
 		StepVerifier.create(itemRepo.findByDesc("Alexa")).expectSubscription().expectNextCount(1).verifyComplete();
+	}
+
+	@Test
+	public void saveItem() {
+		Item item = new Item("PG123", "Prashant Item", 9000.90);
+		Mono<Item> savedItem = itemRepo.save(item);
+		StepVerifier.create(savedItem.log("Saved Item:")).expectSubscription()
+				.expectNextMatches(item1 -> item1.getId() != null && item1.getDesc().equals("Prashant Item"))
+				.verifyComplete();
+	}
+
+//	@Test
+//	public void updateItem() {
+//		double price = 23.50;
+//		Flux<Item> findByDesc = itemRepo.findByDesc("Prashant Item").map();
+//		Mono<Item> savedItem = itemRepo.save(item);
+//		StepVerifier.create(savedItem.log("Saved Item:")).expectSubscription()
+//				.expectNextMatches(item1 -> item1.getId() != null && item1.getDesc().equals("Prashant Item"))
+//				.verifyComplete();
+//	}
+
+	@Test
+	public void deleteItem() {
+		Mono<Void> deletedItem = itemRepo.findById("ABC").map(Item::getId).flatMap(id -> itemRepo.deleteById(id));
+		StepVerifier.create(deletedItem.log("deleted Item:")).expectSubscription()
+				.verifyComplete();
 	}
 }
